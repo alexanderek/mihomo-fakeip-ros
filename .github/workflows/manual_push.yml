@@ -73,6 +73,10 @@ jobs:
       - name: Build and push mihomo AMD64_v1
         uses: docker/build-push-action@v4
         with:
+          driver: docker-container
+          driver-opts: |
+            image=moby/buildkit:master
+            network=host
           context: ./
           file: ./Dockerfile
           platforms: linux/amd64
@@ -91,6 +95,10 @@ jobs:
       - name: Build and push mihomo AMD64_v2
         uses: docker/build-push-action@v4
         with:
+          driver: docker-container
+          driver-opts: |
+            image=moby/buildkit:master
+            network=host
           context: ./
           file: ./Dockerfile
           platforms: linux/amd64
@@ -109,6 +117,10 @@ jobs:
       - name: Build and push mihomo AMD64_v4
         uses: docker/build-push-action@v4
         with:
+          driver: docker-container
+          driver-opts: |
+            image=moby/buildkit:master
+            network=host
           context: ./
           file: ./Dockerfile
           platforms: linux/amd64
@@ -127,6 +139,10 @@ jobs:
       - name: Build and push mihomo multi-arch
         uses: docker/build-push-action@v4
         with:
+          driver: docker-container
+          driver-opts: |
+            image=moby/buildkit:master
+            network=host
           context: ./
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64,linux/arm/v7
