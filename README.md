@@ -1,4 +1,4 @@
-# mihomo-fakeip-ros
+# mikrotik-mihomo-fakeip
 > Maintained fork of [Medium1992/Mihomo-FakeIP-RoS](https://github.com/Medium1992/Mihomo-FakeIP-RoS).
 > Original repository is archived; this fork continues maintenance and documentation updates.
 
@@ -46,7 +46,7 @@ NAMESERVER_POLICY="video.example#1.1.1.1,*.example.org#1.1.1.1"
 
 ## Example Usage
 
-This example demonstrates how to integrate the `mihomo-fakeip-ros` container with MikroTik RouterOS to enable fake DNS forwarding. Fake IPs are issued for specific domains, routed back to the container, and outgoing traffic can be directed to any destination (including standard RouterOS tunnels).
+This example demonstrates how to integrate the `mikrotik-mihomo-fakeip` container with MikroTik RouterOS to enable fake DNS forwarding. Fake IPs are issued for specific domains, routed back to the container, and outgoing traffic can be directed to any destination (including standard RouterOS tunnels).
 
 ### 1. Create a container interface
 
@@ -82,13 +82,13 @@ add key=NAMESERVER_POLICY list=fakeip value="*.example.com#tls://9.9.9.9:853"
 ### 5. Pull and run the container
 
 ```bash
-/container/add remote-image="ghcr.io/alexanderek/mihomo-fakeip-ros:latest" envlists=fakeip interface=fakeip root-dir=Containers/fakeip start-on-boot=yes
+/container/add remote-image="ghcr.io/alexanderek/mikrotik-mihomo-fakeip:latest" envlists=fakeip interface=fakeip root-dir=Containers/fakeip start-on-boot=yes
 ```
 
 or
 
 ```bash
-/container/add remote-image="registry-1.docker.io/alexanderek/mihomo-fakeip-ros:latest" envlists=fakeip interface=fakeip root-dir=Containers/fakeip start-on-boot=yes
+/container/add remote-image="registry-1.docker.io/alexanderek/mikrotik-mihomo-fakeip:latest" envlists=fakeip interface=fakeip root-dir=Containers/fakeip start-on-boot=yes
 ```
 
 > **Note**: For AMD v1 or v2 architectures, specify the appropriate tag. Check available tags at: Docker Hub or github. Older VPS hosts (e.g., Xeon E5 series) often require the v2 tag.
