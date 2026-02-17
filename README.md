@@ -1,7 +1,48 @@
-All the functionality of this container is available in the [repository](https://github.com/Medium1992/mihomo-proxy-ros), so it has been archived.
+# mihomo-fakeip-ros
+> Maintained fork of [Medium1992/Mihomo-FakeIP-RoS](https://github.com/Medium1992/Mihomo-FakeIP-RoS).
+> Original repository is archived; this fork continues maintenance and documentation updates.
 
-# Mihomo-FakeIP-RoS
 This repository provides a Mihomo build with an integrated configuration, designed for deployment on MikroTik RouterOS via containerization, utilizing DNS static forwarding and the native RouterOS tunneling features.
+
+## Environment variables
+
+The container currently supports these environment variables:
+
+| Variable | What it does | Default | Example |
+|---|---|---|---|
+| `FAKE_IP_RANGE` | Fake-IP pool used by `dns.fake-ip-range` | `198.18.0.0/15` | `10.202.0.0/15` |
+| `FAKE_IP_TTL` | Fake-IP TTL used by `dns.fake-ip-ttl` | `1` | `60` |
+| `LOGLEVEL` | Mihomo `log-level` in generated config | `error` | `warning` |
+| `FAKE_IP_FILTER` | Optional CSV list converted to `dns.fake-ip-filter` YAML list | empty | `localhost,*.lan,*.local` |
+| `NAMESERVER_POLICY` | Optional CSV `domain#dns` list converted to `dns.nameserver-policy` | empty | `*.ui.com#tls://9.9.9.9:853` |
+
+Current generated DNS defaults (fixed in `entrypoint.sh`, no env override):
+- `dns.listen: 0.0.0.0:53`
+- `dns.enhanced-mode: fake-ip`
+- `dns.default-nameserver: [8.8.8.8, 9.9.9.9, 1.1.1.1]`
+- `ipv6: false`
+
+## NAMESERVER_POLICY (dns.nameserver-policy)
+
+Format:
+
+```bash
+NAMESERVER_POLICY="domain1#dns1,domain2#dns2"
+```
+
+- Elements are separated by commas.
+- Inside each element, one `#` separates `domain` and upstream `dns`.
+- Upstream examples: `1.1.1.1`, `tls://9.9.9.9:853`.
+
+Examples:
+
+```bash
+NAMESERVER_POLICY="*.ui.com#tls://9.9.9.9:853"
+NAMESERVER_POLICY="unifi.ui.com#tls://9.9.9.9:853,*.ubnt.com#tls://9.9.9.9:853"
+NAMESERVER_POLICY="*.example.com#1.1.1.1,*.example.net#1.1.1.1"
+```
+
+> **Warning**: There is no strict format validation yet. Incorrect input can generate invalid YAML/configuration, so keep the exact `domain#dns` CSV format.
 
 ## Example Usage
 
@@ -27,19 +68,15 @@ This example demonstrates how to integrate the `mihomo-fakeip-ros` container wit
 
 ### 4. Add environment variables
 
-Customize these environment variables as needed to control the fake IP behavior and logging:
-
-| Variable       | Description                              | Example Value       |
-|----------------|------------------------------------------|---------------------|
-| FAKE_IP_RANGE  | Pool of addresses used for fake IPs      | 198.18.0.0/15       |
-| FAKE_IP_TTL    | TTL for fake IP entries                  | 1                   |
-| LOGLEVEL       | Log level for mihomo                     | silent              |
+Set required variables, then optionally add `FAKE_IP_FILTER` and `NAMESERVER_POLICY`:
 
 ```bash
 /container/envs
 add key=FAKE_IP_RANGE list=fakeip value=198.18.0.0/15
-add key=LOGLEVEL list=fakeip value=silent
+add key=LOGLEVEL list=fakeip value=error
 add key=FAKE_IP_TTL list=fakeip value=1
+add key=FAKE_IP_FILTER list=fakeip value="localhost,*.lan,*.local"
+add key=NAMESERVER_POLICY list=fakeip value="*.ui.com#tls://9.9.9.9:853"
 ```
 
 ### 5. Pull and run the container
@@ -95,6 +132,8 @@ add action=mark-routing chain=prerouting connection-mark=fakeip in-interface=fak
 
 ```bash
 /ip/dns/static/add type=FWD forward-to=fakeip match-subdomain=yes name=googlevideo.com
+/ip/dns/static/add type=FWD forward-to=fakeip match-subdomain=yes name=ui.com
+/ip/dns/static/add type=FWD forward-to=fakeip match-subdomain=yes name=ubnt.com
 ```
 
 > **Note**: Repeat this command for additional domains that should resolve to fake IPs.
@@ -108,3 +147,33 @@ This configuration issues fake IPs for specified domains via `FWD` rules, routes
 ```
 
 > **Note**: Replace XXX.XXX.XXX.XXX with your actual gateway to complete the routing setup.
+
+## Minimal test plan / Verification
+
+1. Start the container and confirm it is running:
+
+```bash
+/container/print where name~"mihomo"
+```
+
+2. Confirm config exists inside the container:
+
+```bash
+/container/shell <container-id-or-name>
+cat /root/.config/mihomo/config.yaml
+```
+
+3. If `NAMESERVER_POLICY` is set, confirm `nameserver-policy:` is present in `config.yaml`.
+
+4. From a client device in your LAN, query the router DNS and verify domains matched by your `type=FWD` rules return fake IPs (this is expected behavior in fake-ip mode). Replace `<ROUTER_DNS_IP>` with your router's DNS IP (LAN IP).
+
+```bash
+# Client device commands:
+# Windows:
+nslookup unifi.ui.com <ROUTER_DNS_IP>
+# Linux/macOS:
+dig @<ROUTER_DNS_IP> unifi.ui.com
+
+# RouterOS DNS cache check:
+/ip dns cache print where name~"unifi.ui.com"
+```
