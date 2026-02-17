@@ -14,7 +14,7 @@ The container currently supports these environment variables:
 | `FAKE_IP_TTL` | Fake-IP TTL used by `dns.fake-ip-ttl` | `1` | `60` |
 | `LOGLEVEL` | Mihomo `log-level` in generated config | `error` | `warning` |
 | `FAKE_IP_FILTER` | Optional CSV list converted to `dns.fake-ip-filter` YAML list | empty | `localhost,*.lan,*.local` |
-| `NAMESERVER_POLICY` | Optional CSV `domain#dns` list converted to `dns.nameserver-policy` | empty | `*.ui.com#tls://9.9.9.9:853` |
+| `NAMESERVER_POLICY` | Optional CSV `domain#dns` list converted to `dns.nameserver-policy` | empty | `*.example.com#tls://9.9.9.9:853` |
 
 Current generated DNS defaults (fixed in `entrypoint.sh`, no env override):
 - `dns.listen: 0.0.0.0:53`
@@ -37,9 +37,9 @@ NAMESERVER_POLICY="domain1#dns1,domain2#dns2"
 Examples:
 
 ```bash
-NAMESERVER_POLICY="*.ui.com#tls://9.9.9.9:853"
-NAMESERVER_POLICY="unifi.ui.com#tls://9.9.9.9:853,*.ubnt.com#tls://9.9.9.9:853"
-NAMESERVER_POLICY="*.example.com#1.1.1.1,*.example.net#1.1.1.1"
+NAMESERVER_POLICY="*.example.com#tls://9.9.9.9:853"
+NAMESERVER_POLICY="service.example#tls://9.9.9.9:853,updates.example.net#tls://9.9.9.9:853"
+NAMESERVER_POLICY="video.example#1.1.1.1,*.example.org#1.1.1.1"
 ```
 
 > **Warning**: There is no strict format validation yet. Incorrect input can generate invalid YAML/configuration, so keep the exact `domain#dns` CSV format.
@@ -76,7 +76,7 @@ add key=FAKE_IP_RANGE list=fakeip value=198.18.0.0/15
 add key=LOGLEVEL list=fakeip value=error
 add key=FAKE_IP_TTL list=fakeip value=1
 add key=FAKE_IP_FILTER list=fakeip value="localhost,*.lan,*.local"
-add key=NAMESERVER_POLICY list=fakeip value="*.ui.com#tls://9.9.9.9:853"
+add key=NAMESERVER_POLICY list=fakeip value="*.example.com#tls://9.9.9.9:853"
 ```
 
 ### 5. Pull and run the container
@@ -131,9 +131,9 @@ add action=mark-routing chain=prerouting connection-mark=fakeip in-interface=fak
 ### 10. Add domains for fake IP resolution
 
 ```bash
-/ip/dns/static/add type=FWD forward-to=fakeip match-subdomain=yes name=googlevideo.com
-/ip/dns/static/add type=FWD forward-to=fakeip match-subdomain=yes name=ui.com
-/ip/dns/static/add type=FWD forward-to=fakeip match-subdomain=yes name=ubnt.com
+/ip/dns/static/add type=FWD forward-to=fakeip match-subdomain=yes name=video.example
+/ip/dns/static/add type=FWD forward-to=fakeip match-subdomain=yes name=service.example
+/ip/dns/static/add type=FWD forward-to=fakeip match-subdomain=yes name=updates.example.net
 ```
 
 > **Note**: Repeat this command for additional domains that should resolve to fake IPs.
@@ -170,10 +170,10 @@ cat /root/.config/mihomo/config.yaml
 ```bash
 # Client device commands:
 # Windows:
-nslookup unifi.ui.com <ROUTER_DNS_IP>
+nslookup service.example <ROUTER_DNS_IP>
 # Linux/macOS:
-dig @<ROUTER_DNS_IP> unifi.ui.com
+dig @<ROUTER_DNS_IP> service.example
 
 # RouterOS DNS cache check:
-/ip dns cache print where name~"unifi.ui.com"
+/ip dns cache print where name~"service.example"
 ```
