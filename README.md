@@ -82,13 +82,13 @@ add key=NAMESERVER_POLICY list=fakeip value="*.example.com#tls://9.9.9.9:853"
 ### 5. Pull and run the container
 
 ```bash
-/container/add remote-image="ghcr.io/medium1992/mihomo-fakeip-ros" envlists=fakeip interface=fakeip root-dir=Containers/fakeip start-on-boot=yes
+/container/add remote-image="ghcr.io/alexanderek/mihomo-fakeip-ros:latest" envlists=fakeip interface=fakeip root-dir=Containers/fakeip start-on-boot=yes
 ```
 
 or
 
 ```bash
-/container/add remote-image="registry-1.docker.io/medium1992/mihomo-fakeip-ros" envlists=fakeip interface=fakeip root-dir=Containers/fakeip start-on-boot=yes
+/container/add remote-image="registry-1.docker.io/alexanderek/mihomo-fakeip-ros:latest" envlists=fakeip interface=fakeip root-dir=Containers/fakeip start-on-boot=yes
 ```
 
 > **Note**: For AMD v1 or v2 architectures, specify the appropriate tag. Check available tags at: Docker Hub or github. Older VPS hosts (e.g., Xeon E5 series) often require the v2 tag.
