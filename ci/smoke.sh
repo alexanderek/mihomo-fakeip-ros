@@ -6,7 +6,7 @@ cd "$ROOT_DIR"
 
 DEFAULT_MIHOMO_TAG="$(grep -Eo '\bv[0-9]+\.[0-9]+\.[0-9]+\b' README.md 2>/dev/null | head -n1 || true)"
 if [[ -z "$DEFAULT_MIHOMO_TAG" ]]; then
-  DEFAULT_MIHOMO_TAG="master"
+  DEFAULT_MIHOMO_TAG="main"
 fi
 
 IMAGE_NAME="${IMAGE_NAME:-mikrotik-mihomo-fakeip:smoke}"
