@@ -1,5 +1,5 @@
 # mikrotik-mihomo-fakeip
-> Maintained fork of [Medium1992/Mihomo-FakeIP-RoS](https://github.com/Medium1992/Mihomo-FakeIP-RoS).
+> Maintained fork of an archived upstream project.
 > Original repository is archived; this fork continues maintenance and documentation updates.
 
 This repository provides a Mihomo build with an integrated configuration, designed for deployment on MikroTik RouterOS via containerization, utilizing DNS static forwarding and the native RouterOS tunneling features.
@@ -91,7 +91,8 @@ or
 /container/add remote-image="registry-1.docker.io/alexanderek/mikrotik-mihomo-fakeip:latest" envlists=fakeip interface=fakeip root-dir=Containers/fakeip start-on-boot=yes
 ```
 
-> **Note**: For AMD v1 or v2 architectures, specify the appropriate tag. Check available tags at: Docker Hub or github. Older VPS hosts (e.g., Xeon E5 series) often require the v2 tag.
+> **Note**: Depending on RouterOS version, CLI may show `envlists` or `envlist`; use tab-completion.
+> **Note**: Published CPU-specific tags include `amd64v1` and `amd64v2` (also versioned tags like `vX.Y.Z-amd64v1` and `vX.Y.Z-amd64v2`); check tags in GHCR (`ghcr.io/alexanderek/mikrotik-mihomo-fakeip`) or Docker Hub (`alexanderek/mikrotik-mihomo-fakeip`).
 
 ### 6. Add a route for fake IPs to the container’s gateway
 
