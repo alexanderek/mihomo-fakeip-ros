@@ -64,8 +64,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Detect Docker Hub credentials
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -n "$DOCKERHUB_USERNAME" ] && [ -n "$DOCKERHUB_TOKEN" ]; then
+            echo "PUSH_DOCKERHUB=true" >> $GITHUB_ENV
+            echo "PUSH_DOCKERHUB=true"
+          else
+            echo "PUSH_DOCKERHUB=false" >> $GITHUB_ENV
+            echo "PUSH_DOCKERHUB=false"
+          fi
+
       # 5. Логинимся в Docker Hub
       - name: Login to Docker Hub
+        if: ${{ env.PUSH_DOCKERHUB == 'true' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -92,8 +106,6 @@ jobs:
           tags: |
             ghcr.io/alexanderek/mikrotik-mihomo-fakeip:amd64v1
             ghcr.io/alexanderek/mikrotik-mihomo-fakeip:${{ env.VERSION }}-amd64v1
-            alexanderek/mikrotik-mihomo-fakeip:amd64v1
-            alexanderek/mikrotik-mihomo-fakeip:${{ env.VERSION }}-amd64v1
 
       # 8. Сборка и пуш AMD64_v2
       - name: Build and push mihomo AMD64_v2
@@ -110,10 +122,8 @@ jobs:
           tags: |
             ghcr.io/alexanderek/mikrotik-mihomo-fakeip:amd64v2
             ghcr.io/alexanderek/mikrotik-mihomo-fakeip:${{ env.VERSION }}-amd64v2
-            alexanderek/mikrotik-mihomo-fakeip:amd64v2
-            alexanderek/mikrotik-mihomo-fakeip:${{ env.VERSION }}-amd64v2
 
-        # 8. Сборка и пуш AMD64_v4
+      # 8. Сборка и пуш AMD64_v4
       - name: Build and push mihomo AMD64_v4
         uses: docker/build-push-action@v4
         with:
@@ -128,8 +138,6 @@ jobs:
           tags: |
             ghcr.io/alexanderek/mikrotik-mihomo-fakeip:amd64v4
             ghcr.io/alexanderek/mikrotik-mihomo-fakeip:${{ env.VERSION }}-amd64v4
-            alexanderek/mikrotik-mihomo-fakeip:amd64v4
-            alexanderek/mikrotik-mihomo-fakeip:${{ env.VERSION }}-amd64v4
 
       # 9. Сборка и пуш multi-arch (AMD64_v3) + latest
       - name: Build and push mihomo multi-arch
@@ -146,8 +154,18 @@ jobs:
           tags: |
             ghcr.io/alexanderek/mikrotik-mihomo-fakeip:latest
             ghcr.io/alexanderek/mikrotik-mihomo-fakeip:${{ env.VERSION }}
-            alexanderek/mikrotik-mihomo-fakeip:latest
-            alexanderek/mikrotik-mihomo-fakeip:${{ env.VERSION }}
+
+      - name: Publish tags to Docker Hub (copy from GHCR)
+        if: ${{ env.PUSH_DOCKERHUB == 'true' }}
+        run: |
+          docker buildx imagetools create -t alexanderek/mikrotik-mihomo-fakeip:amd64v1 ghcr.io/${PACKAGE_OWNER}/${PACKAGE_NAME}:amd64v1
+          docker buildx imagetools create -t alexanderek/mikrotik-mihomo-fakeip:${VERSION}-amd64v1 ghcr.io/${PACKAGE_OWNER}/${PACKAGE_NAME}:${VERSION}-amd64v1
+          docker buildx imagetools create -t alexanderek/mikrotik-mihomo-fakeip:amd64v2 ghcr.io/${PACKAGE_OWNER}/${PACKAGE_NAME}:amd64v2
+          docker buildx imagetools create -t alexanderek/mikrotik-mihomo-fakeip:${VERSION}-amd64v2 ghcr.io/${PACKAGE_OWNER}/${PACKAGE_NAME}:${VERSION}-amd64v2
+          docker buildx imagetools create -t alexanderek/mikrotik-mihomo-fakeip:amd64v4 ghcr.io/${PACKAGE_OWNER}/${PACKAGE_NAME}:amd64v4
+          docker buildx imagetools create -t alexanderek/mikrotik-mihomo-fakeip:${VERSION}-amd64v4 ghcr.io/${PACKAGE_OWNER}/${PACKAGE_NAME}:${VERSION}-amd64v4
+          docker buildx imagetools create -t alexanderek/mikrotik-mihomo-fakeip:latest ghcr.io/${PACKAGE_OWNER}/${PACKAGE_NAME}:latest
+          docker buildx imagetools create -t alexanderek/mikrotik-mihomo-fakeip:${VERSION} ghcr.io/${PACKAGE_OWNER}/${PACKAGE_NAME}:${VERSION}
 
       - name: Log in to GHCR with crane
         run: echo "${GITHUB_TOKEN}" | crane auth login ghcr.io -u ${PACKAGE_OWNER} --password-stdin
