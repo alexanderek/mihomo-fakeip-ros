@@ -41,29 +41,24 @@ jobs:
           echo "Latest stable mihomo tag: $MIHOMO_TAG"
           echo "MIHOMO_TAG=$MIHOMO_TAG" >> $GITHUB_ENV
 
-      # 3. Получаем текущий тег из GHCR для latest
-      - name: Get current latest tag from Docker Hub
+      # 3. Получаем текущий semver-тег из GHCR
+      - name: Get current latest semver tag from GHCR
         id: current_tag
         run: |
-          TAGS=$(curl -fsSL "https://hub.docker.com/v2/repositories/alexanderek/mikrotik-mihomo-fakeip/tags" | jq -r '.results[].name // empty' || true)
-          LATEST_VERSION_TAG=$(echo "$TAGS" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1 || true)
-          if [ -z "$LATEST_VERSION_TAG" ]; then
-            if [ -z "$TAGS" ]; then
-              echo "Docker Hub tags unavailable, assuming first build"
-            else
-              echo "No version tag found in GitHub, assuming first build"
-            fi
-            echo "CURRENT_TAG=none" >> $GITHUB_ENV
-          else
-            echo "Current latest version tag in GitHub: $LATEST_VERSION_TAG"
-            echo "CURRENT_TAG=$LATEST_VERSION_TAG" >> $GITHUB_ENV
-          fi
+          CURRENT_TAG=$(curl -fsSL \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/users/alexanderek/packages/container/mikrotik-mihomo-fakeip/versions?per_page=100" | \
+            jq -r '.[].metadata.container.tags[]? | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))' | \
+            sort -V | tail -n1 || true)
+          echo "Current latest semver tag in GHCR: ${CURRENT_TAG:-<none>}"
+          echo "CURRENT_TAG=$CURRENT_TAG" >> $GITHUB_ENV
 
       # 4. Сравниваем теги
       - name: Compare tags
         id: compare
         run: |
-          if [ "$CURRENT_TAG" = "none" ] || [ "$MIHOMO_TAG" != "$CURRENT_TAG" ]; then
+          if [ "$MIHOMO_TAG" != "$CURRENT_TAG" ]; then
             echo "New stable version detected: $MIHOMO_TAG (current: $CURRENT_TAG)"
             echo "BUILD=true" >> $GITHUB_ENV
             echo "VERSION=$MIHOMO_TAG" >> $GITHUB_ENV
